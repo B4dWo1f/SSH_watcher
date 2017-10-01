@@ -10,17 +10,21 @@ import test as geoip    # Import personal geoip
 import attacks as func
 import datetime as dt
 import numpy as np
+import sys
 import os
 here = os.path.dirname(os.path.realpath(__file__))  # script folder
 HOME = os.getenv('HOME')
 USER = os.getenv('USER')
-hostname = os.uname()[1]
-hostname = 'kastercloud'
-#cwd = os.getcwd()   # execution folder
 
 
-log_file = '/var/log/auth.log'
-log_file = 'auth.log'
+## Standard input to select file and hostname, mainly for debugging
+try: log_file = sys.argv[1]
+except IndexError: log_file = '/var/log/auth.log'
+
+try: hostname = sys.argv[1]
+except IndexError: hostname = os.uname()[1]
+
+
 
 ## Read file and  Analyze the sshd entries
 sshd_logins = os.popen('grep " sshd\[" %s'%(log_file)).read().splitlines()
