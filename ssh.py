@@ -21,7 +21,7 @@ USER = os.getenv('USER')
 try: log_file = sys.argv[1]
 except IndexError: log_file = '/var/log/auth.log'
 
-try: hostname = sys.argv[1]
+try: hostname = sys.argv[2]
 except IndexError: hostname = os.uname()[1]
 
 

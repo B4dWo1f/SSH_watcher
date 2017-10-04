@@ -20,21 +20,21 @@ WHEN = np.array([(1,0,0,a) for a in M[:,3]])
 #LAT,LON,NUM,WHEN = np.loadtxt('attacks.csv',delimiter=',',unpack=True)
 #WHEN = [(1,0,0,a) for a in WHEN]
 
-fname = here+'/mundo.npy'
-M = np.load(fname)
-Y = M[:,0]
-X = M[:,1]
-Z = M[:,2]
-## define grid.
-#xi = np.reshape(X,(360,180))
-#yi = np.reshape(Y,(360,180))
-#zi = np.reshape(Z,(360,180))
-print('gridding...')
-###from matplotlib.mlab import griddata
-xi = np.linspace(min(X),max(X),360)
-yi = np.linspace(min(Y),max(Y),180)
-zi = griddata(X,Y,Z,xi,yi)
-print('...done')
+#fname = here+'/mundo.npy'
+#M = np.load(fname)
+#Y = M[:,0]
+#X = M[:,1]
+#Z = M[:,2]
+### define grid.
+##xi = np.reshape(X,(360,180))
+##yi = np.reshape(Y,(360,180))
+##zi = np.reshape(Z,(360,180))
+#print('gridding...')
+####from matplotlib.mlab import griddata
+#xi = np.linspace(min(X),max(X),360)
+#yi = np.linspace(min(Y),max(Y),180)
+#zi = griddata(X,Y,Z,xi,yi)
+#print('...done')
 
 #### Plot ####
 #fig, ax = plt.subplots(figsize=cm2inch(40,20),frameon=False)
@@ -60,16 +60,16 @@ from mycolor import mycmap
 cm = mycmap(stops,Ns=Ns)
 l = 9000
 ## Surface image
-ax.contourf(xi, yi, zi,zorder=0,cmap=cm,vmin=-l,vmax=l)
+#ax.contourf(xi, yi, zi,zorder=0,cmap=cm,vmin=-l,vmax=l)
 ax.scatter(LON,LAT,s=20*NUM,c=WHEN,edgecolors='none',zorder=10)
 
 ## Plot settings
-ax.set_xlim(min(X),max(X))
-ax.set_ylim(min(Y),max(Y))
+ax.set_xlim([-180,180]) #min(X),max(X))
+ax.set_ylim([-90,90]) #min(Y),max(Y))
 ax.set_aspect('equal')
 
 fig.patch.set_visible(False)
 ax.axis('off')
-with open(HOME+'/attacks.png', 'w') as outfile:
+with open(HOME+'/ownCloud/CODES/desk/new/attacks.png', 'w') as outfile:
     fig.canvas.print_png(outfile)
 plt.show()
