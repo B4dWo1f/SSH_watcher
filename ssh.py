@@ -74,12 +74,13 @@ LAT,LON,NUM,WHEN = [],[],[],[]
 for ip in dif_IPs:
    try:   # Try to find local directory of IP-GPS
       resp = os.popen('grep "%s   " %s'%(ip,'ips.dat')).read()
-      lat,lon = map(float,resp.split()[1:])
+      lat,lon = map(float,resp.split()[1:3])
    except ValueError:
       info = geoip.analyze_IP(ip)
       lat,lon = info.coor
       f = open('ips.dat','a')  # This file should be deleted ~ once a month
-      f.write(ip+'   '+str(lat)+'   '+str(lon)+'\n')
+      f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
+      f.write(now.strftime('%Y   %m   %d') +'\n')
       f.close()
    num = np.count_nonzero(IPs == ip)
    latest_attempt = np.max(dates[IPs==ip])
