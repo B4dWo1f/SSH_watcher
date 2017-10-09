@@ -26,5 +26,6 @@ for i in range(len(ips)):
    ip,la,lo,y,m,d = ips[i],lat[i],lon[i],year[i],month[i],day[i]
    for x in ip.split('.'):
       g.write(x+s)
-   g.write(y+s+m+s+d+s+la+s+lo+'\n')
+   g.write(la+s+lo+'\n')   # first only IP-GPS (no dates)
+   #g.write(y+s+m+s+d+s+la+s+lo+'\n')
 g.close()
