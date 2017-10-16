@@ -54,7 +54,7 @@ for l in sshd_logins:
 ## Extract info from each attempt
 attempts = []
 for l in failed_logins + alert_logins + port_scans: # TODO Split contributions
-   resp = func.parse_attempt(l,hostname=hostname)
+   resp = func.parse_attempt(l) #,hostname=hostname)
    if resp != None: attempts.append(resp)
 
 
