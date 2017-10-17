@@ -7,7 +7,7 @@
 """
 
 import test as geoip    # Import personal geoip
-import attacks as func
+import parser as func
 import datetime as dt
 import numpy as np
 import sys
@@ -24,6 +24,7 @@ except IndexError: log_file = '/var/log/auth.log'
 try: hostname = sys.argv[2]
 except IndexError: hostname = os.uname()[1]
 
+ips_file = here + '/ips.dat'
 
 
 ## Read file and  Analyze the sshd entries
@@ -73,12 +74,12 @@ now = dt.datetime.now()
 LAT,LON,NUM,WHEN = [],[],[],[]
 for ip in dif_IPs:
    try:   # Try to find local directory of IP-GPS
-      resp = os.popen('grep "%s   " %s'%(ip,'ips.dat')).read()
+      resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read()
       lat,lon = map(float,resp.split()[1:3])
    except ValueError:
       info = geoip.analyze_IP(ip)
       lat,lon = info.coor
-      f = open('ips.dat','a')  # This file should be deleted ~ once a month
+      f = open(ips_file,'a')  # This file should be deleted ~ once a month
       f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
       f.write(now.strftime('%Y   %m   %d') +'\n')
       f.close()
