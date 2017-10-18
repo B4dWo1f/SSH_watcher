@@ -88,9 +88,14 @@ def parse_attempt(line):
       m = re.search(p,event)
       host,ip = m.groups()
    elif 'Invalid user' in event:
-      p = r'Invalid user *(\w+) from (\S+.\S+.\S+.\S+)'
-      m = re.search(p,event) #   , re.UNICODE)
-      user,ip = m.groups()
+      try:
+         p = r'Invalid user *(\w+) from (\S+.\S+.\S+.\S+)'
+         m = re.search(p,event) #   , re.UNICODE)
+         user,ip = m.groups()
+      except AttributeError: # in case of empty user
+         p = r'Invalid user *from (\S+.\S+.\S+.\S+)'
+         m = re.search(p,event) #   , re.UNICODE)
+         ip, = m.groups()
    elif 'Failed password' in event:
       p = r'Failed password for ([ ^\W\w\d_ ]*) from (\S+.\S+.\S+.\S+) '
       p += r'port (\S+) ssh2'
