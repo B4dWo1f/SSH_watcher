@@ -1,3 +1,4 @@
-*.npy
+run_hydra.sh
 *.log
 *.dat
+*.npy
