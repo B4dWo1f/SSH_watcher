@@ -95,22 +95,24 @@ for ip in dif_IPs:
    if not changed: changed = False  # if changed=True, then stop checking
    try:   # Try to find local directory of IP-GPS
       resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read()
+      lat,lon = map(float,resp.split()[1:3])
       T = dt.datetime.strptime(','.join(resp.split()[-3:]),'%Y,%m,%d')
       if (now-T).total_seconds() > ndays*60*60*24:
          # to be downgraded to debug, or removed
          LG.info('check for IP geolocation change')
+         LG.info('previous GPS: (%s,%s)'%(lat,lon))
          changed = True
          # remove previous data
          com = 'sed -i "s/%s\n//g" %s'%(resp,ips_file)
          LG.debug(com)
          os.system(com)
          raise ValueError
-      lat,lon = map(float,resp.split()[1:3])
       LG.debug('%s from file'%(ip))
    except ValueError:
       LG.debug('%s from web'%(ip))
       info = geoip.analyze_IP(ip)
       lat,lon = info.coor
+      if changed: LG.info('new GPS: (%s,%s)'%(lat,lon))
       f = open(ips_file,'a')  # This file should be deleted ~ once a month
       f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
       f.write(now.strftime('%Y   %m   %d') +'\n')
