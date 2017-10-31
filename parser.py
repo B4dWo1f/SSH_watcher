@@ -88,7 +88,6 @@ def parse_attempt(line):
       m = re.search(p,event)
       host,ip = m.groups()
    elif 'Invalid user' in event:
-      print(line)
       try:
          p = r'Invalid user *([ ^\W\w\d_ ]*) from (\S+.\S+.\S+.\S+)'
          m = re.search(p,event) #   , re.UNICODE)

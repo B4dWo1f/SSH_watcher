@@ -10,12 +10,17 @@ import os
 here = os.path.dirname(os.path.realpath(__file__))  # script folder
 HOME = os.getenv('HOME')
 USER = os.getenv('USER')
+
+## personal system-wide log tools and decorators, which can be found here:
+# https://github.com/B4dWo1f/bin/blob/master/log_help.py
+import log_help
 import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)s:%(levelname)s - %(message)s',
                     datefmt='%Y/%m/%d-%H:%M:%S',
                     filename='SSHlog.log', filemode='w')
 LG = logging.getLogger('main')
+log_help.screen_handler(LG)
 
 # dependence on my geoip library, which can be found here:
 # https://github.com/B4dWo1f/bin/blob/master/geoip.py
@@ -27,14 +32,15 @@ import sys
 
 
 ## Standard input to select file and hostname, mainly for debugging
+# TODO: maybe argparse this
 try: log_file = sys.argv[1]
 except IndexError: log_file = '/var/log/auth.log'
 
 try: hostname = sys.argv[2]
 except IndexError: hostname = os.uname()[1]
 
-ips_file = here + '/ips.dat'
-
+ips_file = here + '/ips.dat'  # Local database of IP-GPS
+ndays = int(open('Ndays').read())  # Number of days to update IP-GPS data
 
 ## Read file and  Analyze the sshd entries
 sshd_logins = os.popen('grep " sshd\[" %s'%(log_file)).read().splitlines()
@@ -82,17 +88,23 @@ dates = np.asarray(dates)
 ports = np.asarray(ports)
 
 now = dt.datetime.now()
+changed = False
 LAT,LON,NUM,WHEN = [],[],[],[]
 cont = 0
 for ip in dif_IPs:
+   if not changed: changed = False  # if changed=True, then stop checking
    try:   # Try to find local directory of IP-GPS
       resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read()
-      #aux = ' '.join(resp.split()[-3:])
-      #DT = dt.datetime.strptime(aux, '%Y %m %d')
-      #if (now-DT).total_seconds() > 60*60*24*30:
-      #   print('data older than a month')
-      #else: print('data new enough')
-      #exit()
+      T = dt.datetime.strptime(','.join(resp.split()[-3:]),'%Y,%m,%d')
+      if (now-T).total_seconds() > ndays*60*60*24:
+         # to be downgraded to debug, or removed
+         LG.info('check for IP geolocation change')
+         changed = True
+         # remove previous data
+         com = 'sed -i "s/%s\n//g" %s'%(resp,ips_file)
+         LG.debug(com)
+         os.system(com)
+         raise ValueError
       lat,lon = map(float,resp.split()[1:3])
       LG.debug('%s from file'%(ip))
    except ValueError:
@@ -103,8 +115,6 @@ for ip in dif_IPs:
       f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
       f.write(now.strftime('%Y   %m   %d') +'\n')
       f.close()
-   #print('out')
-   #exit()
    num = np.count_nonzero(IPs == ip)
    latest_attempt = np.max(dates[IPs==ip])
    d = (1+(now-latest_attempt).total_seconds())/7200
@@ -113,6 +123,13 @@ for ip in dif_IPs:
    NUM.append(num)
    WHEN.append( min(1/d,1) )   # (1,0,0,min(1/d,1)))
    cont += 1
+
+if not changed:  # Store the number of days by which we should update ips.dat
+   ndays += 1
+   with open('Ndays','w') as f:
+      f.write(str(ndays)+'\n')
+   f.close()  # unnecessary
+
 
 M = np.vstack((LAT,LON,NUM,WHEN)).transpose()
 np.save(here+'/attacks.npy',M)
