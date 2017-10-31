@@ -90,6 +90,7 @@ ports = np.asarray(ports)
 now = dt.datetime.now()
 changed = False
 LAT,LON,NUM,WHEN = [],[],[],[]
+Ts=  []  # control to avoid diverging Ndays control
 cont = 0
 for ip in dif_IPs:
    if not changed: changed = False  # if changed=True, then stop checking
@@ -97,9 +98,12 @@ for ip in dif_IPs:
       resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read()
       lat,lon = map(float,resp.split()[1:3])
       T = dt.datetime.strptime(','.join(resp.split()[-3:]),'%Y,%m,%d')
-      if (now-T).total_seconds() > ndays*60*60*24:
+      Tdelta = (now-T).total_seconds()
+      if Tdelta > ndays*60*60*24:
          # to be downgraded to debug, or removed
-         LG.info('check for IP geolocation change')
+         msg = 'check for IP geolocation change after'
+         msg += ' %.3f days'%(Tdelta/(60*60*24))
+         LG.info(msg)
          LG.info('previous GPS: (%s,%s)'%(lat,lon))
          changed = True
          # remove previous data
@@ -117,6 +121,7 @@ for ip in dif_IPs:
       f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
       f.write(now.strftime('%Y   %m   %d') +'\n')
       f.close()
+   Ts.append(Tdelta)
    num = np.count_nonzero(IPs == ip)
    latest_attempt = np.max(dates[IPs==ip])
    d = (1+(now-latest_attempt).total_seconds())/7200
@@ -128,9 +133,10 @@ for ip in dif_IPs:
 
 if not changed:  # Store the number of days by which we should update ips.dat
    ndays += 1
+   nn = max([7,int(max(Ts)/(60*60*24))]) # Max number of days in the data file
    with open('Ndays','w') as f:
-      f.write(str(ndays)+'\n')
-   f.close()  # unnecessary
+      f.write(str(min([nn,ndays]))+'\n')
+   f.close()  # unnecessary?
 
 
 M = np.vstack((LAT,LON,NUM,WHEN)).transpose()
