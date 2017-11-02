@@ -101,7 +101,7 @@ for ip in dif_IPs:
          LG.info('check for IP geolocation change')
          changed = True
          # remove previous data
-         com = 'sed -i "s/%s\n//g" %s'%(resp,ips_file)
+         com = 'sed -i "s/%s\\n//g" %s'%(resp,ips_file)
          LG.debug(com)
          os.system(com)
          raise ValueError
