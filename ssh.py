@@ -107,7 +107,7 @@ for ip in dif_IPs:
          LG.info('previous GPS: (%s,%s)'%(lat,lon))
          changed = True
          # remove previous data
-         com = 'sed -i "s/%s\\n//g" %s'%(resp,ips_file)
+         com = 'sed -i "/^%s/d" %s'%(resp.split()[0],ips_file)
          LG.debug(com)
          os.system(com)
          raise ValueError
