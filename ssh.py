@@ -87,6 +87,7 @@ IPs = np.asarray(IPs)
 dates = np.asarray(dates)
 ports = np.asarray(ports)
 
+
 now = dt.datetime.now()
 changed = False
 LAT,LON,NUM,WHEN = [],[],[],[]
@@ -94,37 +95,52 @@ Ts= []  # control to avoid diverging Ndays control
 cont,Tdelta = 0,0
 for ip in dif_IPs:
    if not changed: changed = False  # if changed=True, then stop checking
-   try:   # Try to find local directory of IP-GPS
-      resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read()
+   resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read().splitlines()
+   if len(resp) == 0:
+      LG.debug('No previous entry for ip: %s'%(ip))
+      ## No Geo-IP info
+      LG.debug('%s from web'%(ip))
+      info = geoip.analyze_IP(ip)
+      lat,lon = info.coor
+      with open(ips_file,'a') as f:
+         f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
+         f.write(now.strftime('%Y   %m   %d') +'\n')
+   elif len(resp) == 1:
+      LG.debug('1 previous entry for ip: %s'%(ip))
+      resp = resp[0]
       lat,lon = map(float,resp.split()[1:3])
       T = dt.datetime.strptime(','.join(resp.split()[-3:]),'%Y,%m,%d')
       Tdelta = (now-T).total_seconds()
       if Tdelta > ndays*60*60*24:
-         msg = 'check for IP geolocation change after'
-         msg += ' %.3f days'%(Tdelta/(60*60*24))
-         LG.info(msg)         # to be downgraded to debug, or removed
-         LG.info('previous GPS: (%s,%s)'%(lat,lon))
+         LG.debug('previous entry from %.1f days ago'%(Tdelta/(60*60*24)))
+         LG.debug('%s from web'%(ip))
          info = geoip.analyze_IP(ip)
          lat_new,lon_new = info.coor
          if (lat_new,lon_new) != (lat,lon):
+            LG.warning('Geo-IP info changed')
             changed = True
             # remove previous data
             com = 'sed -i "/^%s/d" %s'%(resp.split()[0],ips_file)
             LG.debug(com)
             os.system(com)
             with open(ips_file,'a') as f:
-               f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
+               f.write(ip+'   '+str(lat_new)+'   '+str(lon_new)+'   ')
                f.write(now.strftime('%Y   %m   %d') +'\n')
-         else: pass
-   except ValueError:
+      else: pass ## No need to do anything
+   else:  # Duplicated Geo-IP info
+      LG.debug('%s previous entries for ip: %s'%(len(resp),ip))
+      # remove previous data
+      for R in resp:
+         com = 'sed -i "/^%s/d" %s'%(R.split()[0],ips_file)
+         LG.debug(com)
+         os.system(com)
+      ## No Geo-IP info
       LG.debug('%s from web'%(ip))
       info = geoip.analyze_IP(ip)
       lat,lon = info.coor
-      if changed: LG.info('new GPS: (%s,%s)'%(lat,lon))
-      f = open(ips_file,'a')  # This file should be deleted ~ once a month
-      f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
-      f.write(now.strftime('%Y   %m   %d') +'\n')
-      f.close()
+      with open(ips_file,'a') as f:
+         f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
+         f.write(now.strftime('%Y   %m   %d') +'\n')
    Ts.append(Tdelta)
    num = np.count_nonzero(IPs == ip)
    latest_attempt = np.max(dates[IPs==ip])
