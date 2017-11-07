@@ -115,7 +115,7 @@ for ip in dif_IPs:
             with open(ips_file,'a') as f:
                f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
                f.write(now.strftime('%Y   %m   %d') +'\n')
-         else: changed = False
+         else: pass
    except ValueError:
       LG.debug('%s from web'%(ip))
       info = geoip.analyze_IP(ip)
