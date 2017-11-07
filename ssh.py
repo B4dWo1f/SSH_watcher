@@ -95,23 +95,27 @@ cont = 0
 for ip in dif_IPs:
    if not changed: changed = False  # if changed=True, then stop checking
    try:   # Try to find local directory of IP-GPS
+      Tdelta = (now-T).total_seconds()
       resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read()
       lat,lon = map(float,resp.split()[1:3])
       T = dt.datetime.strptime(','.join(resp.split()[-3:]),'%Y,%m,%d')
-      Tdelta = (now-T).total_seconds()
       if Tdelta > ndays*60*60*24:
-         # to be downgraded to debug, or removed
          msg = 'check for IP geolocation change after'
          msg += ' %.3f days'%(Tdelta/(60*60*24))
-         LG.info(msg)
+         LG.info(msg)         # to be downgraded to debug, or removed
          LG.info('previous GPS: (%s,%s)'%(lat,lon))
-         changed = True
-         # remove previous data
-         com = 'sed -i "/^%s/d" %s'%(resp.split()[0],ips_file)
-         LG.debug(com)
-         os.system(com)
-         raise ValueError
-      LG.debug('%s from file'%(ip))
+         info = geoip.analyze_IP(ip)
+         lat_new,lon_new = info.coor
+         if (lat_new,lon_new) != (lat,lon):
+            changed = True
+            # remove previous data
+            com = 'sed -i "/^%s/d" %s'%(resp.split()[0],ips_file)
+            LG.debug(com)
+            os.system(com)
+            with open(ips_file,'a') as f:
+               f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
+               f.write(now.strftime('%Y   %m   %d') +'\n')
+         else: changed = False
    except ValueError:
       LG.debug('%s from web'%(ip))
       info = geoip.analyze_IP(ip)
