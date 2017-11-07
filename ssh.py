@@ -90,15 +90,15 @@ ports = np.asarray(ports)
 now = dt.datetime.now()
 changed = False
 LAT,LON,NUM,WHEN = [],[],[],[]
-Ts=  []  # control to avoid diverging Ndays control
-cont = 0
+Ts= []  # control to avoid diverging Ndays control
+cont,Tdelta = 0,0
 for ip in dif_IPs:
    if not changed: changed = False  # if changed=True, then stop checking
    try:   # Try to find local directory of IP-GPS
-      Tdelta = (now-T).total_seconds()
       resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read()
       lat,lon = map(float,resp.split()[1:3])
       T = dt.datetime.strptime(','.join(resp.split()[-3:]),'%Y,%m,%d')
+      Tdelta = (now-T).total_seconds()
       if Tdelta > ndays*60*60*24:
          msg = 'check for IP geolocation change after'
          msg += ' %.3f days'%(Tdelta/(60*60*24))
