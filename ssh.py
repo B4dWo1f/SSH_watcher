@@ -91,8 +91,8 @@ ports = np.asarray(ports)
 now = dt.datetime.now()
 changed = False
 LAT,LON,NUM,WHEN = [],[],[],[]
-Ts= []  # control to avoid diverging Ndays control
-cont,Tdelta = 0,0
+Ts= []     # control to avoid diverging Ndays control
+cont = 0
 for ip in dif_IPs:
    if not changed: changed = False  # if changed=True, then stop checking
    resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read().splitlines()
@@ -118,6 +118,7 @@ for ip in dif_IPs:
          lat_new,lon_new = info.coor
          if (lat_new,lon_new) != (lat,lon):
             LG.warning('Geo-IP info changed')
+            Ts.append(Tdelta/(60*60*24))  # store only changed dates
             changed = True
             # remove previous data
             com = 'sed -i "/^%s/d" %s'%(resp.split()[0],ips_file)
@@ -141,7 +142,6 @@ for ip in dif_IPs:
       with open(ips_file,'a') as f:
          f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
          f.write(now.strftime('%Y   %m   %d') +'\n')
-   Ts.append(Tdelta)
    num = np.count_nonzero(IPs == ip)
    latest_attempt = np.max(dates[IPs==ip])
    d = (1+(now-latest_attempt).total_seconds())/7200
@@ -151,11 +151,9 @@ for ip in dif_IPs:
    WHEN.append( min(1/d,1) )   # (1,0,0,min(1/d,1)))
    cont += 1
 
-if not changed:  # Store the number of days by which we should update ips.dat
-   ndays += 1
-   nn = max([7,int(max(Ts)/(60*60*24))]) # Max number of days in the data file
+if len(Ts)>0:
    with open('Ndays','w') as f:
-      f.write(str(min([nn,ndays]))+'\n')
+      f.write(str(int(min(Ts))+1)+'\n')
    f.close()  # unnecessary?
 
 
