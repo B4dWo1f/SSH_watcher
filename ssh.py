@@ -152,7 +152,7 @@ for ip in dif_IPs:
    cont += 1
 
 if len(Ts)>0:
-   with open('Ndays','w') as f:
+   with open(ndays,'w') as f:
       f.write(str(int(min(Ts))+1)+'\n')
    f.close()  # unnecessary?
 
