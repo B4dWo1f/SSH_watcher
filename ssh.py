@@ -40,7 +40,7 @@ try: hostname = sys.argv[2]
 except IndexError: hostname = os.uname()[1]
 
 ips_file = here + '/ips.dat'  # Local database of IP-GPS
-ndays = int(open('Ndays').read())  # Number of days to update IP-GPS data
+ndays = int(open(here+'/Ndays').read())  # Number of days to update IP-GPS data
 
 ## Read file and  Analyze the sshd entries
 sshd_logins = os.popen('grep " sshd\[" %s'%(log_file)).read().splitlines()
