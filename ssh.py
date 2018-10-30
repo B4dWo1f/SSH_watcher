@@ -5,11 +5,21 @@
   This code will extract and simplify the log file for ssh failed logins and
   port scans...
 """
-
 import os
 here = os.path.dirname(os.path.realpath(__file__))  # script folder
 HOME = os.getenv('HOME')
 USER = os.getenv('USER')
+
+from configparser import ConfigParser, ExtendedInterpolation
+config = ConfigParser(inline_comment_prefixes='#')
+config._interpolation = ExtendedInterpolation()
+config.read(here+'/config.ini')
+
+parms = config['parameters']
+ndays = int(parms['Ndays'])
+ips_file = parms['ips_file']
+log_file = parms['log_file']
+log = parms['log']
 
 ## personal system-wide log tools and decorators, which can be found here:
 # https://github.com/B4dWo1f/bin/blob/master/log_help.py
@@ -18,7 +28,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)s:%(levelname)s - %(message)s',
                     datefmt='%Y/%m/%d-%H:%M:%S',
-                    filename='SSHlog.log', filemode='w')
+                    filename=log, filemode='w')
 LG = logging.getLogger('main')
 log_help.screen_handler(LG)
 
@@ -31,17 +41,17 @@ import numpy as np
 import sys
 
 
-## Standard input to select file and hostname, mainly for debugging
-# TODO: maybe argparse this
-try: log_file = sys.argv[1]
-except IndexError: log_file = '/var/log/auth.log'
+### Standard input to select file and hostname, mainly for debugging
+## TODO: maybe argparse this
+#try: log_file = sys.argv[1]
+#except IndexError: log_file = '/var/log/auth.log'
+#
+#try: hostname = sys.argv[2]
+#except IndexError: hostname = os.uname()[1]
 
-try: hostname = sys.argv[2]
-except IndexError: hostname = os.uname()[1]
-
-ips_file = here + '/ips.dat'  # Local database of IP-GPS
-ndays_file = here+'/Ndays'
-ndays = int(open(ndays_file).read())  # Number of days to update IP-GPS data
+#ips_file = here + '/ips.dat'  # Local database of IP-GPS
+#ndays_file = here+'/Ndays'
+#ndays = int(open(ndays_file).read())  # Number of days to update IP-GPS data
 
 ## Read file and  Analyze the sshd entries
 sshd_logins = os.popen('grep " sshd\[" %s'%(log_file)).read().splitlines()
