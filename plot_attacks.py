@@ -70,6 +70,7 @@ ax.set_aspect('equal')
 
 fig.patch.set_visible(False)
 ax.axis('off')
-with open(HOME+'/ownCloud/CODES/desk/new/attacks.png', 'w') as outfile:
-    fig.canvas.print_png(outfile)
-plt.show()
+#with open(HOME+'/ownCloud/CODES/desk/new/attacks.png', 'w') as outfile:
+#    fig.canvas.print_png(outfile)
+fig.savefig(outfile)
+#plt.show()
