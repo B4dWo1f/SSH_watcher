@@ -81,7 +81,7 @@ for l in logins: # TODO Split contributions
 IPs = [T.ip for T in attempts]
 dates = [T.date for T in attempts]
 ports = [T.port for T in attempts]
-dif_IPs = list(sorted(set(IPs),key=lambda x: float(x.split('.')[0])))
+dif_IPs = list(set(IPs))
 
 ## To array
 IPs = np.asarray(IPs)
@@ -95,6 +95,7 @@ LAT,LON,NUM,WHEN = [],[],[],[]
 Ts= []     # control to avoid diverging Ndays control
 cont = 0
 for ip in dif_IPs:
+   if ip.is_private: continue
    if not changed: changed = False  # if changed=True, then stop checking
    resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read().splitlines()
    if len(resp) == 0:
@@ -104,7 +105,7 @@ for ip in dif_IPs:
       info = geoip.analyze_IP(ip)
       lat,lon = info.coor
       with open(ips_file,'a') as f:
-         f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
+         f.write(str(ip)+'   '+str(lat)+'   '+str(lon)+'   ')
          f.write(now.strftime('%Y   %m   %d') +'\n')
    elif len(resp) == 1:
       LG.debug('1 previous entry for ip: %s'%(ip))

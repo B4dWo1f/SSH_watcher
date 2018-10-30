@@ -3,6 +3,7 @@
 
 import re
 import datetime as dt
+import ipaddress as IP
 
 
 class attempt(object):
@@ -14,7 +15,7 @@ class attempt(object):
    def __init__(self,date,usr,ip,port):
       self.usr = usr
       self.date = date
-      self.ip = ip
+      self.ip = IP.ip_address(ip)
       self.port = port
    def __str__(self):
       msg = 'Date: %s\n'%(self.date)
@@ -66,9 +67,9 @@ def parse_attempt(line):
       m = re.search(p,event)
       user,ip,port,fingerprint = m.groups()
    elif 'Connection closed' in event:
-      p = r'Connection closed by (\S+.\S+.\S+.\S+) \[preauth\]'
+      p = r'Connection closed by (\S+.\S+.\S+.\S+) port (\S+) \[preauth\]'
       m = re.search(p,event)
-      ip, = m.groups()
+      ip,port, = m.groups()
    elif 'Did not receive' in event:
       p = r'Did not receive identification string from (\S+.\S+.\S+.\S+)'
       m = re.search(p,event)
