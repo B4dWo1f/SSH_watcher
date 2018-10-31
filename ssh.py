@@ -106,7 +106,9 @@ LAT,LON,NUM,WHEN = [],[],[],[]
 Ts= []     # control to avoid diverging Ndays control
 cont = 0
 for ip in dif_IPs:
-   if ip.is_private: continue
+   if ip.is_private:
+      LG.debug(str(ip)+' is private')
+      continue
    if not changed: changed = False  # if changed=True, then stop checking
    resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read().splitlines()
    if len(resp) == 0:
