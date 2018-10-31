@@ -72,5 +72,5 @@ fig.patch.set_visible(False)
 ax.axis('off')
 #with open(HOME+'/ownCloud/CODES/desk/new/attacks.png', 'w') as outfile:
 #    fig.canvas.print_png(outfile)
-fig.savefig(outfile)
+fig.savefig(HOME+'/attacks.png')
 #plt.show()
