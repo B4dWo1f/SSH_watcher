@@ -71,9 +71,10 @@ def parse_attempt(line):
       m = re.search(p,event)
       ip,port, = m.groups()
    elif 'Did not receive' in event:
-      p = r'Did not receive identification string from (\S+.\S+.\S+.\S+)'
+      #p = r'Did not receive identification string from (\S+.\S+.\S+.\S+)'
+      p = r'Did not receive identification string from (\S+.\S+.\S+.\S+) port (\S+)'
       m = re.search(p,event)
-      ip, = m.groups()
+      ip,port = m.groups()
    elif 'PAM' in event:
       p = r'PAM (\S+) more authentication (\w+); logname= uid=0 euid=0 '
       p += r'tty=ssh ruser= rhost=(\S+.\S+.\S+.\S+)  user=(\w+)'
