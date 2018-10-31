@@ -90,7 +90,8 @@ def parse_attempt(line):
       host,ip = m.groups()
    elif 'Invalid user' in event:
       try:
-         p = r'Invalid user *([ ^\W\w\d_ ]*) from (\S+.\S+.\S+.\S+)'
+         #p = r'Invalid user *([ ^\W\w\d_ ]*) from (\S+.\S+.\S+.\S+)'
+         p = r'Invalid user *([ ^\W\w\d_ ]*) from (\S+.\S+.\S+.\S+) port (\S+)'
          m = re.search(p,event) #   , re.UNICODE)
          user,ip = m.groups()
       except AttributeError: # in case of empty user
