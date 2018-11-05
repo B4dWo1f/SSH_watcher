@@ -12,11 +12,18 @@ HOME = os.getenv('HOME')
 
 
 
-M = np.load(here+'/attacks.npy')
-LAT = M[:,0]
-LON = M[:,1]
-NUM = M[:,2]
-WHEN = np.array([(1,0,0,a) for a in M[:,3]])
+Ml = np.load(here+'/logins.npy')
+LAT_l = Ml[:,0]
+LON_l = Ml[:,1]
+NUM_l = Ml[:,2]
+WHEN_l = np.array([(0.08627451, 0.78039216, 0.02352941,l) for l in Ml[:,3]])
+
+Ma = np.load(here+'/attacks.npy')
+LAT_a = Ma[:,0]
+LON_a = Ma[:,1]
+NUM_a = Ma[:,2]
+WHEN_a = np.array([(1,0,0,a) for a in Ma[:,3]])
+
 #LAT,LON,NUM,WHEN = np.loadtxt('attacks.csv',delimiter=',',unpack=True)
 #WHEN = [(1,0,0,a) for a in WHEN]
 
@@ -47,21 +54,22 @@ fig = plt.figure(figsize=cm2inch(40,20),frameon=False)
 ax = fig.add_axes([0, 0, 1, 1])
 ax.axis('off')
 
-## My personalized colormap
-col0 = np.array((15,36,99))     # dark blue    | Sea
-col1 = np.array((79,106,166))   # light blue___|_____
-col2 = np.array((149,177,104))  # light green  |
-col3 = np.array((225,216,222))  # white-ish    | Land
-col4 = np.array((167,102,113))  # red-ish      |
-
-stops = [col0/255,col1/255,col2/255,col3/255,col4/255]
-Ns = [100,2,15,85]
-from mycolor import mycmap
-cm = mycmap(stops,Ns=Ns)
-l = 9000
-## Surface image
-#ax.contourf(xi, yi, zi,zorder=0,cmap=cm,vmin=-l,vmax=l)
-ax.scatter(LON,LAT,s=20*NUM,c=WHEN,edgecolors='none',zorder=10)
+### My personalized colormap
+#col0 = np.array((15,36,99))     # dark blue    | Sea
+#col1 = np.array((79,106,166))   # light blue___|_____
+#col2 = np.array((149,177,104))  # light green  |
+#col3 = np.array((225,216,222))  # white-ish    | Land
+#col4 = np.array((167,102,113))  # red-ish      |
+#
+#stops = [col0/255,col1/255,col2/255,col3/255,col4/255]
+#Ns = [100,2,15,85]
+#from mycolor import mycmap
+#cm = mycmap(stops,Ns=Ns)
+#l = 9000
+### Surface image
+##ax.contourf(xi, yi, zi,zorder=0,cmap=cm,vmin=-l,vmax=l)
+ax.scatter(LON_a,LAT_a,s=20*NUM_a,c=WHEN_a,edgecolors='none',zorder=10)
+ax.scatter(LON_l,LAT_l,s=20*NUM_l,c=WHEN_l,edgecolors='none',zorder=10)
 
 ## Plot settings
 ax.set_xlim([-180,180]) #min(X),max(X))

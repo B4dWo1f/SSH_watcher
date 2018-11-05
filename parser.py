@@ -4,6 +4,8 @@
 import re
 import datetime as dt
 import ipaddress as IP
+import logging
+LG = logging.getLogger(__name__)   # Logger for this module
 
 
 class attempt(object):
@@ -66,6 +68,10 @@ def parse_attempt(line):
       p += r'ssh2: RSA ([ ^\W\w\d_ ]*)'
       m = re.search(p,event)
       user,ip,port,fingerprint = m.groups()
+   elif 'Accepted password for ' in event:
+      p = r'Accepted password for (\w+) from (\S+.\S+.\S+.\S+) port (\S+) ssh2'
+      m = re.search(p,event)
+      user,ip,port = m.groups()
    elif 'Connection closed' in event:
       p = r'Connection closed by (\S+.\S+.\S+.\S+) port (\S+) \[preauth\]'
       m = re.search(p,event)
@@ -118,3 +124,85 @@ def parse_attempt(line):
       print(line)
       exit()
    return attempt(date,user,str(ip),port)
+
+
+
+################################################################################
+
+import geoip
+import os
+import numpy as np
+
+def attacks_info(IPs,dates,ports,ips_file,ndays):
+   now = dt.datetime.utcnow()
+   dif_IPs = list(set(IPs))
+
+   ## To array
+   IPs = np.asarray(IPs)
+   dates = np.asarray(dates)
+   ports = np.asarray(ports)
+   changed = False
+   LAT,LON,NUM,WHEN = [],[],[],[]
+   Ts= []     # control to avoid diverging Ndays control
+   cont = 0
+   for ip in dif_IPs:
+      if ip.is_private:
+         LG.debug(str(ip)+' is private')
+         continue
+      if not changed: changed = False  # if changed=True, then stop checking
+      resp = os.popen('grep "%s   " %s'%(ip,ips_file)).read().splitlines()
+      if len(resp) == 0:
+         LG.debug('No previous entry for ip: %s'%(ip))
+         ## No Geo-IP info
+         LG.debug('%s from web'%(ip))
+         info = geoip.analyze_IP(ip)
+         lat,lon = info.coor
+         with open(ips_file,'a') as f:
+            f.write(str(ip)+'   '+str(lat)+'   '+str(lon)+'   ')
+            f.write(now.strftime('%Y   %m   %d') +'\n')
+      elif len(resp) == 1:
+         LG.debug('1 previous entry for ip: %s'%(ip))
+         resp = resp[0]
+         lat,lon = map(float,resp.split()[1:3])
+         T = dt.datetime.strptime(','.join(resp.split()[-3:]),'%Y,%m,%d')
+         Tdelta = (now-T).total_seconds()
+         if Tdelta > ndays*60*60*24:
+            LG.debug('previous entry from %.1f days ago'%(Tdelta/(60*60*24)))
+            LG.debug('%s from web'%(ip))
+            info = geoip.analyze_IP(ip)
+            lat_new,lon_new = info.coor
+            if (lat_new,lon_new) != (lat,lon):
+               LG.warning('Geo-IP info changed')
+               Ts.append(Tdelta/(60*60*24))  # store only changed dates
+               changed = True
+               # remove previous data
+               com = 'sed -i "/^%s/d" %s'%(resp.split()[0],ips_file)
+               LG.debug(com)
+               os.system(com)
+               with open(ips_file,'a') as f:
+                  f.write(ip+'   '+str(lat_new)+'   '+str(lon_new)+'   ')
+                  f.write(now.strftime('%Y   %m   %d') +'\n')
+         else: pass ## No need to do anything
+      else:  # Duplicated Geo-IP info
+         LG.debug('%s previous entries for ip: %s'%(len(resp),ip))
+         # remove previous data
+         for R in resp:
+            com = 'sed -i "/^%s/d" %s'%(R.split()[0],ips_file)
+            LG.debug(com)
+            os.system(com)
+         ## No Geo-IP info
+         LG.debug('%s from web'%(ip))
+         info = geoip.analyze_IP(ip)
+         lat,lon = info.coor
+         with open(ips_file,'a') as f:
+            f.write(ip+'   '+str(lat)+'   '+str(lon)+'   ')
+            f.write(now.strftime('%Y   %m   %d') +'\n')
+      num = np.count_nonzero(IPs == ip)
+      latest_attempt = np.max(dates[IPs==ip])
+      d = (1+(now-latest_attempt).total_seconds())/7200
+      LAT.append(lat)
+      LON.append(lon)
+      NUM.append(num)
+      WHEN.append( min(1/d,1) )   # (1,0,0,min(1/d,1)))
+      cont += 1
+   return LAT, LON, NUM, WHEN, Ts
