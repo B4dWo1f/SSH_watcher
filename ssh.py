@@ -55,7 +55,7 @@ import sys
 #ndays = int(open(ndays_file).read())  # Number of days to update IP-GPS data
 
 ## Read file and  Analyze the sshd entries
-sshd_logins = os.popen('grep " sshd\[" %s'%(log_file)).read().splitlines()
+sshd_logins = os.popen('grep -a " sshd\[" %s'%(log_file)).read().splitlines()
 
 ## Classify the entries to study
 accepted_logins = []     #
