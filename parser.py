@@ -132,8 +132,10 @@ def parse_attempt(line):
 import geoip
 import os
 import numpy as np
-
+HOME = os.getenv('HOME')
 def attacks_info(IPs,dates,ports,ips_file,ndays):
+   try: Wlist = open(HOME+'/.whitelist','r').read().splitlines()
+   except: Wlist = []
    now = dt.datetime.utcnow()
    dif_IPs = list(set(IPs))
 
@@ -146,7 +148,7 @@ def attacks_info(IPs,dates,ports,ips_file,ndays):
    Ts= []     # control to avoid diverging Ndays control
    cont = 0
    for ip in dif_IPs:
-      if ip.is_private:
+      if ip.is_private or str(ip) in Wlist:
          LG.debug(str(ip)+' is private')
          continue
       if not changed: changed = False  # if changed=True, then stop checking
